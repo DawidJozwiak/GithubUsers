@@ -2,6 +2,8 @@
 //  ViewController.swift
 //  Github Users
 //
+//  Cocoa Touch class created to present animation of fading github logo
+//
 //  Created by Dawid Jóźwiak on 4/10/21.
 //
 
@@ -9,6 +11,7 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    //Setting the same imageview as on LaunchScreen
     private let imageView: UIImageView = {
         let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
         imageView.image = UIImage(named: "LaunchIcons")
@@ -20,6 +23,7 @@ class ViewController: UIViewController {
         view.addSubview(imageView)
     }
     
+    //adding layout subview with image in center
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         imageView.center = view.center
@@ -28,11 +32,13 @@ class ViewController: UIViewController {
             self.executeOnce()
         })
     }
+    //execute animation only once
     lazy var executeOnce: () -> Void = {
         self.animate()
         return {}
     }()
     
+    //animate method used to create starting animation
     private func animate(){
         //start of an animation
         UIView.animate(withDuration: 1, animations: {
@@ -49,6 +55,7 @@ class ViewController: UIViewController {
         }, completion: {done in
             if done{
                 DispatchQueue.main.asyncAfter(deadline: .now()+0.5, execute:{
+                    //change controller
                     let listViewController = ListViewController()
                     listViewController.modalTransitionStyle = .crossDissolve
                     listViewController.modalPresentationStyle = .fullScreen

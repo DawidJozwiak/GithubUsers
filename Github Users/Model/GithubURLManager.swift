@@ -2,25 +2,27 @@
 //  GithubURLManager.swift
 //  Github Users
 //
+// Methods that manages URL connections and contains protocol to use when data is downloaded
+//
 //  Created by Dawid Jóźwiak on 4/10/21.
 //
 
 import Foundation
 import UIKit
 
+// Protocol that contains methods of delegates
 protocol GithubURLManagerDelegate{
     func didUpdateGithub(manager: GithubURLManager , githubUserData: GithubUserModel)
     func didUpdateRepo(manager:GithubURLManager, repNum: Int)
+    func didFailWithError(error: Error)
 }
 
 struct GithubURLManager{
-    //URL with apikey already inserted in
-    //APPLE REQUIRES HTTPS!!!
     
-    
-    
+    //setting delegate
     var delegate: GithubURLManagerDelegate?
     
+    //perform request for data
     func performRequest(apiNumber: Int){
         //Create URL
         if let url = URL(string: "https://api.github.com/users?since=\(apiNumber)&per_page=30"){
@@ -29,13 +31,12 @@ struct GithubURLManager{
             //Giving session a task
             let task = session.dataTask(with: url) { (data, response, error) in
                 if error != nil {
-                    print(error!)
+                    self.delegate?.didFailWithError(error: error!)
                     return
                 }
                 
                 if let safeData = data{
                     //Convert data to string
-                    //self is needed in here
                     parseJSON(usersData: safeData)
                 }
             }
@@ -44,7 +45,7 @@ struct GithubURLManager{
         }
     }
     
-    
+    //perform request for data about repository numbers
     func performRequestRepo(nickname: String) -> Data{
         var dataUser = Data()
         //Create URL
@@ -54,7 +55,7 @@ struct GithubURLManager{
             //Giving session a task
             let task = session.dataTask(with: url) { (data, response, error) in
                 if error != nil {
-                    print(error!)
+                    self.delegate?.didFailWithError(error: error!)
                     return
                 }
                 
@@ -70,9 +71,6 @@ struct GithubURLManager{
          return dataUser
     }
     
-    
-    
-    
     //Parse JSON to decoded data
     func parseJSON(usersData: Data){
         let decoder = JSONDecoder()
@@ -84,20 +82,20 @@ struct GithubURLManager{
             imgArray = []
             let decodedData = try decoder.decode([GithubData].self, from: usersData)
             //decodedData.forEach{
-            for (index, element) in decodedData.enumerated() {
-                nickArray.append(element.login)
-                imgArray.append(element.avatar_url)
-                
+            decodedData.forEach{
+                nickArray.append($0.login)
+                imgArray.append($0.avatar_url)
             }
             
             let github = GithubUserModel(name: nickArray, imageURL: imgArray)
            self.delegate?.didUpdateGithub(manager: self, githubUserData: github)
         }
         catch{
-            print(error)
+            self.delegate?.didFailWithError(error: error)
         }
     }
     
+    //parse JSON from repo number
     func parseJSONRepo(nickName: String) {
  
             if let url = URL(string: "https://api.github.com/users/\(nickName)"){
@@ -106,7 +104,7 @@ struct GithubURLManager{
                 //Giving session a task
                 let task = session.dataTask(with: url) { (data, response, error) in
                     if error != nil {
-                        print(error!)
+                        self.delegate?.didFailWithError(error: error!)
                         return
                     }
                     
@@ -124,7 +122,7 @@ struct GithubURLManager{
         }
     
      
-    
+    //prepare object to send
     func prepareObject(repoData: Data) -> Int{
        
         var x: Int = 0
@@ -147,7 +145,7 @@ struct GithubURLManager{
         }
         
         catch{
-            print(error)
+            self.delegate?.didFailWithError(error: error)
         
     }
         return x
